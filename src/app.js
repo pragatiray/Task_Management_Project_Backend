@@ -7,48 +7,32 @@ import rateLimit from "express-rate-limit";
 
 import authRoutes from "./routes/auth.routes.js";
 import taskRoutes from "./routes/task.routes.js";
-import { swaggerDocs } from "./swagger.js"; // ✅ Import swaggerDocs
-
+import { swaggerDocs } from "./config/swagger.js";
 const app = express();
 
-// 🔹 CORS
-app.use(
-  cors({
-    origin: "*", // in production use whitelist
-    credentials: true,
-  })
-);
+// CORS - ⚠️ allow localhost for credentials
+app.use(cors({
+  origin: "http://localhost:3000", 
+  credentials: true
+}));
 
-// 🔹 Security headers
 app.use(helmet());
-
-// 🔹 Compression
 app.use(compression());
 
-// 🔹 Rate Limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 min
-  max: 100,
-});
+const limiter = rateLimit({ windowMs: 15*60*1000, max: 100 });
 app.use(limiter);
 
-// 🔹 Body parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// 🔹 Cookies
 app.use(cookieParser());
 
-// 🔹 Routes
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 
-// 🔹 Health check
-app.get("/", (req, res) => {
-  res.send("API is running...");
-});
+// Swagger docs
+swaggerDocs(app, 3000);
 
-// 🔹 Swagger docs (initialize)
-swaggerDocs(app, 3000); // ✅ call the function from swagger.js
+app.get("/", (req, res) => res.send("API is running..."));
 
 export default app;
