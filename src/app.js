@@ -7,9 +7,9 @@ import rateLimit from "express-rate-limit";
 
 import authRoutes from "./routes/auth.routes.js";
 import taskRoutes from "./routes/task.routes.js";
+import { swaggerDocs } from "./swagger.js"; // ✅ Import swaggerDocs
 
 const app = express();
-
 
 // 🔹 CORS
 app.use(
@@ -28,7 +28,7 @@ app.use(compression());
 // 🔹 Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 min
-  max: 100, // limit each IP
+  max: 100,
 });
 app.use(limiter);
 
@@ -39,15 +39,16 @@ app.use(express.urlencoded({ extended: true }));
 // 🔹 Cookies
 app.use(cookieParser());
 
-
 // 🔹 Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 
-
-// 🔹 Health check (nice to have)
+// 🔹 Health check
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
+
+// 🔹 Swagger docs (initialize)
+swaggerDocs(app, 3000); // ✅ call the function from swagger.js
 
 export default app;

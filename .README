@@ -1,3 +1,24 @@
-- When a user registers, they provide their name, email, and password. The server hashes the password using bcrypt and stores the user in the database. After successful registration, a JWT token is generated and sent back to the client. 
+# Task Management Backend API
 
-- When the user logs in, they provide their email and password, which the server verifies by checking the user exists and comparing the password with the hashed version. If the credentials are correct, the server generates and returns a JWT token. The client can then use this token in the Authorization header to access protected routes, enabling secure authentication and authorization.
+Node.js + Express + MongoDB backend with **role-based access control**.
+
+## Features
+- Roles: `user`, `admin`
+  - User: create tasks, assign to self/teammates, view only own tasks
+  - Admin: view all tasks, update/reassign/delete any task
+- Search (title/description), filter (status/priority), pagination
+
+## Setup
+```bash
+git clone <repo-url>
+cd Task_Management_Project_Backend
+npm install
+
+## Create .env :
+PORT=3000
+MONGO_URI=<your-mongo-uri>
+JWT_SECRET=<your-secret>
+
+RUN:
+
+npm run dev
