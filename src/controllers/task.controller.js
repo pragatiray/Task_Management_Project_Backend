@@ -28,27 +28,46 @@ export const createTask = async (req, res) => {
 // ── LIST (search + filter + pagination + role scope) ──────────
 export const listTasks = async (req, res) => {
   try {
+    console.log("List tasks for user:", req.user); 
     const { search, status, priority, page = 1, limit = 10 } = req.query;
-    const filter = {
-      ...scopeByRole(req.user),
-      ...buildFilters({ search, status, priority }),
-    };
 
-    const skip  = (page - 1) * limit;
+    // 1️⃣ Role-based filter
+    const filter = req.user.role === 'admin'
+      ? {}  // admin sees all tasks
+      : { createdBy: req.user._id };  // normal user sees only their tasks
+
+    // 2️⃣ Add search filter (if provided)
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // 3️⃣ Add status and priority filters
+    if (status) filter.status = status;
+    if (priority) filter.priority = priority;
+
+    // 4️⃣ Pagination
+    const skip = (page - 1) * limit;
     const total = await Task.countDocuments(filter);
+
+    // 5️⃣ Fetch tasks
     const tasks = await Task.find(filter)
-      .populate('createdBy',  'name email')
+      .populate('createdBy', 'name email')
       .populate('assignedTo', 'name email')
       .sort({ dueDate: 1 })
       .skip(Number(skip))
       .limit(Number(limit));
 
+    // 6️⃣ Response
     res.json({
-      total,
-      page:  Number(page),
-      pages: Math.ceil(total / limit),
-      tasks,
+        total,
+        page: Number(page),
+        pages: Math.ceil(total / limit),
+        tasks,
     });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -57,18 +76,54 @@ export const listTasks = async (req, res) => {
 // ── GET ONE ───────────────────────────────────────────────────
 export const getTask = async (req, res) => {
   try {
-    const task = await Task.findOne({
-      _id: req.params.id,
-      ...scopeByRole(req.user),
-    })
-      .populate('createdBy',  'name email')
+    const { id } = req.params;
+    let filter;
+    if (req.user.role === 'admin') {
+      // Admin sees ALL tasks
+      filter = { _id: id };
+    } else {
+      // User sees only: their created tasks OR assigned tasks
+      filter = {
+        _id: id,
+        $or: [
+          { createdBy: req.user._id },  // Tasks they created
+          { assignedTo: req.user._id }  // Tasks assigned to them
+        ]
+      };
+    }
+
+    const task = await Task.findOne(filter)
+      .populate('createdBy', 'name email')
       .populate('assignedTo', 'name email');
 
-    if (!task) return res.status(404).json({ error: 'Task not found or access denied' });
+    if (!task) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Task not found or access denied' 
+      });
+    }
 
-    res.json(task);
+    // // 📊 Permissions for frontend
+    // const permissions = {
+    //   canEdit: req.user.role === 'admin' || 
+    //            req.user._id.toString() === task.createdBy._id.toString(),
+    //   canDelete: req.user.role === 'admin' || 
+    //              req.user._id.toString() === task.createdBy._id.toString(),
+    //   isOwner: req.user._id.toString() === task.createdBy._id.toString(),
+    //   isAssignee: req.user._id.toString() === task.assignedTo?._id?.toString()
+    // };
+
+    res.json({
+      success: true,
+      task,
+      // permissions
+        });
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ 
+      success: false, 
+      error: 'Server error' 
+    });
   }
 };
 
@@ -114,36 +169,36 @@ export const deleteTask = async (req, res) => {
 
 
 
-// Get Tasks (with filters + pagination)
-export const getTasks = async (req, res) => {
-  const { page = 1, limit = 10, status, priority, search } = req.query;
+// // Get Tasks (with filters + pagination)
+// export const getTasks = async (req, res) => {
+//   const { page = 1, limit = 10, status, priority, search } = req.query;
 
-  let query = {};
+//   let query = {};
 
-  // Role-based access
-  if (req.user.role !== "admin") {
-    query.$or = [
-      { createdBy: req.user.id },
-      { assignedTo: req.user.id },
-    ];
-  }
+//   // Role-based access
+//   if (req.user.role !== "admin") {
+//     query.$or = [
+//       { createdBy: req.user.id },
+//       { assignedTo: req.user.id },
+//     ];
+//   }
 
-  if (status) query.status = status;
-  if (priority) query.priority = priority;
+//   if (status) query.status = status;
+//   if (priority) query.priority = priority;
 
-  if (search) {
-    query.$or = [
-      { title: { $regex: search, $options: "i" } },
-      { description: { $regex: search, $options: "i" } },
-    ];
-  }
+//   if (search) {
+//     query.$or = [
+//       { title: { $regex: search, $options: "i" } },
+//       { description: { $regex: search, $options: "i" } },
+//     ];
+//   }
 
-  const tasks = await Task.find(query)
-    .skip((page - 1) * limit)
-    .limit(Number(limit));
+//   const tasks = await Task.find(query)
+//     .skip((page - 1) * limit)
+//     .limit(Number(limit));
 
-  res.json(tasks);
-};
+//   res.json(tasks);
+// };
 
 // // Update Task
 // export const updateTask = async (req, res) => {
