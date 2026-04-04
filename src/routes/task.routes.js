@@ -16,7 +16,8 @@ router.post("/create",createTask);
 router.get("/view",listTasks);
 router.get("/:id",getTask);
 
-router.put("/:id", updateTask);
+router.patch('/:id', updateTask);
+
 router.delete("/:id", deleteTask);
 
 export default router;
