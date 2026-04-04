@@ -9,9 +9,9 @@ import {
 
 const router = express.Router();
 
-// router.use(protect);
+router.use(protect);
 
-router.post("/", createTask);
+router.post("/create", createTask);
 router.get("/", getTasks);
 router.put("/:id", updateTask);
 router.delete("/:id", deleteTask);

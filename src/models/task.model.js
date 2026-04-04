@@ -24,18 +24,21 @@ const taskSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    assignedBy: {                           // ✅ new field
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   { timestamps: true }
 );
 
-// 🔥 Business Logic
-taskSchema.pre("save", function (next) {
+// ✅ Fixed pre save hook — async, no next
+taskSchema.pre("save", async function () {
   if (this.status === "done") {
     this.completedAt = new Date();
   } else {
     this.completedAt = null;
   }
-  next();
 });
 
 export default mongoose.model("Task", taskSchema);
