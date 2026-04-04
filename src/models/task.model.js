@@ -24,7 +24,7 @@ const taskSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    assignedBy: {                           // ✅ new field
+    assignedBy: {                           
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
@@ -32,7 +32,7 @@ const taskSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ✅ Fixed pre save hook — async, no next
+// Fixed pre save hook — async, no next
 taskSchema.pre("save", async function () {
   if (this.status === "done") {
     this.completedAt = new Date();
