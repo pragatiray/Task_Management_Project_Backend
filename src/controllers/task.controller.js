@@ -3,19 +3,22 @@ import Task from "../models/task.model.js";
 // ── CREATE ────────────────────────────────────────────────────
 export const createTask = async (req, res) => {
   try {
-    const { title, description, status, priority, dueDate, assignedTo } = req.body;
+    const { title, description, status, priority, dueDate, assignedTo, remarks } = req.body;
+
     const task = await Task.create({
       title,
       description,
       status,
       priority,
       dueDate,
-      createdBy:  req.user._id,              // who created it
+      remarks,                               // ✅ add remarks
+      createdBy: req.user._id,               // who created it
       assignedTo: assignedTo ?? req.user._id, // who does it — default self
       assignedBy: req.user._id,              // who assigned it
     });
-     const populated = await task.populate([
-      { path: "createdBy",  select: "name email" },
+
+    const populated = await task.populate([
+      { path: "createdBy", select: "name email" },
       { path: "assignedTo", select: "name email" },
       { path: "assignedBy", select: "name email" },
     ]);

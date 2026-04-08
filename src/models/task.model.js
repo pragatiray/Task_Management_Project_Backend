@@ -28,6 +28,10 @@ const taskSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    remarks : {
+      type: String,
+      minlength: 10
+    }
   },
   { timestamps: true }
 );

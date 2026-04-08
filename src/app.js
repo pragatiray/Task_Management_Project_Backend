@@ -10,7 +10,7 @@ import taskRoutes from "./routes/task.routes.js";
 import { swaggerDocs } from "./config/swagger.js";
 const app = express();
 
-// CORS - ⚠️ allow localhost for credentials
+// CORS -  allow localhost for credentials
 app.use(cors({
   origin: [
       "http://localhost:5173",  
